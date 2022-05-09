@@ -3,7 +3,83 @@ from PIL import ImageTk,Image
 import cv2
 import numpy as np
 from scipy.signal import convolve2d
+from tkinter import filedialog
+def makeBasic():
+    global root
+    root = Tk()
+    root.resizable(width=NO, height=NO)
+    global main_array
+    global MainImage
+    global image_box
+    global white_image
+    global LeftBox
+    image_box = Label()
+    white = np.ones([720, 1080, 3]).astype(np.uint8) * 255
+    white_image = ImageTk.PhotoImage(Image.fromarray(white))
+    LeftBox = Canvas(root)
+    LeftBox.grid(row=1, column=0, columnspan=3)
+    LeftTop=Label(text="Select the transformation")
+    LeftTop.grid(row=0,column=0,columnspan=3)
+    button= Button(root,text="Display the original(loaded) image",command=lambda:back_to_main())
+    button.grid(row=2,column=4)
+    buttonFilePick = Button(root, text="Load a new Image", command=lambda: load_file())
+    buttonFilePick.grid(row=2, column=3)
+    global List
+    List=give_list()
+    List.grid(row=0,columns=4)
+def back_to_main():
+    global main_array
+    update_image(main_array)
+def give_list():
+    global root
+    mylist=["K_means","To BGR","To HSV","To Gray","To HLS"]
+    global var
+    var=StringVar(root)
+    var.set(mylist[0])
+    var.trace("w",update_left)
+    w=OptionMenu(root,var,*mylist)
+    update_left()
+    return w
+def update_left(*args):
+    global var
+    global LeftBox
+    LeftBox.grid_forget()
+    LeftBox=Canvas(width=200,height=700)
+    LeftBox.grid(row=1,column=0,columnspan=3)
+    Labl = Label(LeftBox,text=f"Current option: {var.get()}")
+    Labl.pack()
+    text = Text(LeftBox,width=30)
 
+
+    text.pack()
+    match var.get():
+        #case "K_means":
+            #LeftBox
+        case "To BGR":
+            text.insert(INSERT, "Transforms the RGB image to its BGR representative.")
+            text.config(state=DISABLED)
+            button= Button(LeftBox,text="Transform to BGR",command=lambda:to_transform(cv2.COLOR_RGB2BGR))
+            button.pack()
+        case "To HSV":
+            text.insert(INSERT,"Transforms the RGB image to its HSV representative.")
+            text.config(state=DISABLED)
+            button=Button(LeftBox,text="Transform to HSV",command=lambda:to_transform(cv2.COLOR_RGB2HSV))
+            button.pack()
+        case "To Gray":
+            text.insert(INSERT, "Transforms the RGB image to its grayscale representative.")
+            text.config(state=DISABLED)
+            button = Button(LeftBox, text="Transform to grayscale", command=lambda: to_transform(cv2.COLOR_RGB2GRAY))
+            button.pack()
+        case "To HLS":
+            text.insert(INSERT, "Transforms the RGB image to its HLS representative.")
+            text.config(state=DISABLED)
+            button = Button(LeftBox, text="Transform to HLS", command=lambda: to_transform(cv2.COLOR_RGB2HLS))
+            button.pack()
+
+def to_transform(option):
+    global main_array
+    im = cv2.cvtColor(main_array,option)
+    update_image(im)
 def load_image(name):
     image = cv2.imread(name)
     image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
@@ -58,39 +134,41 @@ def addOutlines(shape, image):
             if (shape[x][y] > 0.4):
                 image[x][y] = [0, 0, 0]
 
-
-
-def main():
-
-    root = Tk()
-    im=load_image("bibi.jpg")
-    im = resizing(im,1080,720)
-    global myimg
-    myimg = ImageTk.PhotoImage(Image.fromarray(im))
+def setWhite():
     global image_box
-    image_box = Label(image=myimg)
-    image_box.grid(row=0,column=3,columnspan=3)
-    yes =1
-    LeftBox=Label(text="LEFT")
-    LeftBox.grid(row=0,column=0,columnspan=3)
-    RightBox=Label(text="RIGHT")
-    RightBox.grid(row=0,column=6,columnspan=3)
-    def update_image(image):
-        global image_box
-        global myimg
-        image_box.grid_forget()
-        myimg = ImageTk.PhotoImage(Image.fromarray(image))
-        image_box = Label(image=myimg)
-        image_box.grid(row=0, column=3, columnspan=3)
+    global white_image
+    image_box.grid_forget()
+    image_box=Label(image=white_image)
+    image_box.grid(row=1,column=3,columnspan=7)
+def update_image(image):
+    global image_box
+    global MainImage
+    image_box.grid_forget()
+    MainImage = ImageTk.PhotoImage(Image.fromarray(image))
+    image_box = Label(image=MainImage)
+    image_box.grid(row=1, column=3, columnspan=7)
+    if image.all()==None:
+         setWhite()
 
 
-    def k_means_exec(image):
-        im = k_means(image, 10)
-        update_image(im)
+def k_means_exec(image):
+    im = k_means(image, 20)
+    update_image(im)
 
+def update_main_image(filename):
+    global main_array
+    main_array=cv2.imread(filename)
+    main_array=cv2.cvtColor(main_array,cv2.COLOR_BGR2RGB)
+    main_array = resizing(main_array, 1080, 720)
+    update_image(main_array)
 
-    button =Button(root,text="K_means!",command=lambda :k_means_exec(im))
-    button.grid(row=1,column=4)
+def load_file():
+    filename = filedialog.askopenfilename(initialdir="/", title="Select an image")
+    update_main_image(filename)
+def main():
+    global root
+    makeBasic()
+    setWhite()
     root.mainloop()
 
 
