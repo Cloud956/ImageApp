@@ -53,8 +53,13 @@ def update_left(*args):
 
     text.pack()
     match var.get():
-        #case "K_means":
-            #LeftBox
+        case "K_means":
+            text.insert(INSERT, "Limits the number of colors on the image, you can set the number of colors allowed below and see the transformation!")
+            text.config(state=DISABLED)
+            entry1=Entry(LeftBox)
+            entry1.pack()
+            button=Button(LeftBox,text="K_means transform",command=lambda:k_means_exec(int(entry1.get())))
+            button.pack()
         case "To BGR":
             text.insert(INSERT, "Transforms the RGB image to its BGR representative.")
             text.config(state=DISABLED)
@@ -151,8 +156,9 @@ def update_image(image):
          setWhite()
 
 
-def k_means_exec(image):
-    im = k_means(image, 20)
+def k_means_exec(numbers):
+    global main_array
+    im = k_means(main_array, numbers)
     update_image(im)
 
 def update_main_image(filename):
