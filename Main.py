@@ -32,7 +32,7 @@ def back_to_main():
     update_image(main_array)
 def give_list():
     global root
-    mylist=["K_means","To BGR","To HSV","To Gray","To HLS"]
+    mylist=["K_means","To BGR","To HSV","To Gray","To HLS","Sobel Edge Detection"]
     global var
     var=StringVar(root)
     var.set(mylist[0])
@@ -80,6 +80,14 @@ def update_left(*args):
             text.config(state=DISABLED)
             button = Button(LeftBox, text="Transform to HLS", command=lambda: to_transform(cv2.COLOR_RGB2HLS))
             button.pack()
+        case "Sobel Edge Detection":
+            text.insert(INSERT,"Displays the shapes in the image, aqcuired using the manual Sobel Edge Detection. You can insert and integer below, which is used in the code to maake the edges stronger/weaker. Recommended number is 5!")
+            text.config(state=DISABLED)
+            entry1 = Entry(LeftBox)
+            entry1.insert(INSERT,"5")
+            entry1.pack()
+            button = Button(LeftBox, text="K_means transform", command=lambda: shapes_exec(int(entry1.get())))
+            button.pack()
 
 def to_transform(option):
     global main_array
@@ -111,6 +119,7 @@ def k_means(image, k):
     # This function takes a grayscale images of edges, with edges being white
     # it applies the edges as black onto the image
 def giveShapes(image, factor=5):
+    image=cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)*255
     SOBEL_X = np.array([[1, 2, 1],
                         [0, 0, 0],
                         [-1, -2, -1]])
@@ -125,7 +134,7 @@ def giveShapes(image, factor=5):
     sy = convolve2d(image, SOBEL_Y * normalization, mode="same", boundary="symm")
     s = np.hypot(sx, sy).astype(np.uint8)
     # Divided by 255 to fit into [0-1]
-    s = s / 255
+    s = s #/255
     return s
 
 def sumUp(kernel):
@@ -145,13 +154,17 @@ def setWhite():
     image_box.grid_forget()
     image_box=Label(image=white_image)
     image_box.grid(row=1,column=3,columnspan=7)
-def update_image(image):
+def update_image(image,bool=0):
     global image_box
     global MainImage
     image_box.grid_forget()
-    MainImage = ImageTk.PhotoImage(Image.fromarray(image))
+    if bool==0:
+        MainImage = ImageTk.PhotoImage(Image.fromarray(image))
     image_box = Label(image=MainImage)
+    if bool==1:
+        MainImage=ImageTk.PhotoImage(Image.fromarray(image,"L"))
     image_box.grid(row=1, column=3, columnspan=7)
+    cv2.imshow("IMAGE",image)
     if image.all()==None:
          setWhite()
 
@@ -160,6 +173,10 @@ def k_means_exec(numbers):
     global main_array
     im = k_means(main_array, numbers)
     update_image(im)
+def shapes_exec(factor):
+    global main_array
+    im=giveShapes(main_array,factor)
+    update_image(im,1)
 
 def update_main_image(filename):
     global main_array
