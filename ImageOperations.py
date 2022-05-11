@@ -2,10 +2,65 @@ import cv2,numpy as np
 from scipy.signal import convolve2d
 import math
 from skimage.util import random_noise
+def main_translate(image,t1,t2):
+    T_matrix = np.array([[1, 0, t1],
+                     [0, 1, t2],
+                     [0, 0, 1]])
+    return translate(image,T_matrix)
+
+def translate(image, translation_matrix):
+    # This function applies translation, with zero padding, with possibly cutting off part of the picture as result
+    new_image = np.zeros_like(image)
+    for x in range(image.shape[0]):
+        for y in range(image.shape[1]):
+            new_position = [x, y, 1]
+            new_position = np.matmul(translation_matrix, new_position)
+            if new_position[0] < image.shape[0] and new_position[1] < image.shape[1]:
+                new_image[new_position[0]][new_position[1]] = image[x][y]
+    return new_image
+def cartoonify(image,edge_factor,means_factor,outlines_factor):
+    s=giveShapes(image,edge_factor)
+    im=k_means(image,means_factor)
+    addOutlines(im,s/255,outlines_factor)
+    return im
+def single_powerLawTransform(image, r):
+    newImage = image.copy()
+    # Carrying out the s=n^r operation on all values
+    newImage = pow(newImage / 255, r)
+    # Multiplying the values by 255 again, for display reasons
+    return (newImage * 255).astype(np.uint8)
+def all_power_law(image,n):
+    b, g, r = cv2.split(image)
+    bN = single_powerLawTransform(b,n)
+    gN = single_powerLawTransform(g,n)
+    rN = single_powerLawTransform(r,n)
+    return cv2.merge([bN, gN, rN])
+def main_power_law(image,r):
+    if len(image.shape)==3:
+        return all_power_law(image,r)
+    else:
+        return single_powerLawTransform(image,r)
+
+def pointwiseInverse(image):
+    # Since the values range from [0-255], we do the operation s=255-n, where s in the new value and n the old value
+    return 255 - image
+
+def allInverse(image):
+    b,g,r=cv2.split(image)
+    bN = pointwiseInverse(b)
+    gN = pointwiseInverse(g)
+    rN = pointwiseInverse(r)
+    return cv2.merge([bN, gN, rN])
+def main_inverse(image):
+    if len(image.shape)==3:
+        return allInverse(image)
+    else:
+        return pointwiseInverse(image)
+
 def uniform_quan(image,q):
     if len(image.shape) == 3:
        return allcolors_quantization(image,q)
-    if len(image.shape)==2:
+    else:
        return uniform_quantization(image,q)
 def uniform_quantization(GrayImage, q):
     if q == 2:
@@ -39,7 +94,7 @@ def linear_sampling(image,factor):
     if len(image.shape) == 3:
         sampled_image = image[::factor, ::factor, :]
         [n1, n2, n3] = image.shape
-    if len(image.shape)==2:
+    else:
         sampled_image = image[::factor, ::factor]
         [n1, n2] = image.shape
     return cv2.resize(sampled_image, [n2,n1], interpolation=cv2.INTER_LINEAR)
@@ -47,7 +102,7 @@ def nearest_sampling(image,factor):
     if len(image.shape) == 3:
         sampled_image = image[::factor, ::factor, :]
         [n1, n2, n3] = image.shape
-    if len(image.shape) == 2:
+    else:
         sampled_image = image[::factor, ::factor]
         [n1, n2] = image.shape
     return cv2.resize(sampled_image, [n2, n1], interpolation=cv2.INTER_NEAREST)
@@ -77,12 +132,17 @@ def sumUp(kernel):
 
     # T his is a k-means built-in method, which was also used in one of the labs
 
-def addOutlines(shape, image):
-    for x in range(shape.shape[0]):
-        for y in range(shape.shape[1]):
-            if (shape[x][y] > 0.4):
-                image[x][y] = [0, 0, 0]
-
+def addOutlines(image,shape,number):
+    if len(image.shape)==3:
+        for x in range(shape.shape[0]):
+            for y in range(shape.shape[1]):
+                if (shape[x][y] > number):
+                    image[x][y] = [0, 0, 0]
+    else:
+        for x in range(shape.shape[0]):
+            for y in range(shape.shape[1]):
+                if (shape[x][y] > number):
+                    image[x][y] = 0
 def k_means(image, k):
     pixel_values = image.reshape(-1, 3)
     pixel_values = np.float32(pixel_values)
