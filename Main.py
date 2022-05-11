@@ -46,7 +46,7 @@ def back_to_main():
 def give_list():
     global root
     mylist = ["To BGR", "To HSV", "To Gray", "To HLS", "K_means", "Sobel Edge Detection", "Linear sampling",
-              "Nearest Neighbour sampling", "Uniform quantization GRAY"]
+              "Nearest Neighbour sampling", "Uniform quantization GRAY","Gaussian Noise"]
     global var
     var = StringVar(root)
     var.set(mylist[0])
@@ -168,6 +168,21 @@ def update_left(*args):
                                 command=lambda: uniform_quan_exec(int(entry1.get()), 1))
                 button.config(bg="#CFCF2F")
                 button.pack()
+            case "Gaussian Noise":
+                text.insert(INSERT,
+                    "Applies Gaussian Random Noise to the image. You can put in a seed for the noise below!")
+                text.config(state=DISABLED)
+                entry1 = Entry(LeftBox)
+                entry1.insert(INSERT, "10001")
+                entry1.pack()
+                button = Button(LeftBox, text="Apply noise to the main image!",
+                        command=lambda: gauss_exec(int(entry1.get())))
+                button.config(bg="#CFCF2F")
+                button.pack()
+                button = Button(LeftBox, text="Apply noise to the current image!",
+                        command=lambda: gauss_exec(int(entry1.get()), 1))
+                button.config(bg="#CFCF2F")
+                button.pack()
 
 
 def to_transform(option):
@@ -177,7 +192,7 @@ def to_transform(option):
 
 
 def load_image(name):
-    print(1)
+   # print(1)
     image = cv2.imread(name)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
@@ -231,6 +246,13 @@ def nearest_sampling_exec(numbers, bool=0):
         im = nearest_sampling(main_array, numbers)
     if bool == 1:
         im = nearest_sampling(current_array, numbers)
+    update_image(im)
+def gauss_exec(numbers, bool=0):
+    global main_array, current_array
+    if bool == 0:
+        im = noise(main_array, numbers)
+    if bool == 1:
+        im = noise(current_array, numbers)
     update_image(im)
 
 

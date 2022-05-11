@@ -1,6 +1,7 @@
 import cv2,numpy as np
 from scipy.signal import convolve2d
 import math
+from skimage.util import random_noise
 def uniform_quan(image,q):
     if len(image.shape) == 3:
        return allcolors_quantization(image,q)
@@ -18,6 +19,16 @@ def uniform_quantization(GrayImage, q):
         QImage = np.digitize(GrayImage, bins)
         QImage = (np.vectorize(bins.tolist().__getitem__)(QImage-1).astype(int))
         return QImage.astype(np.uint8)
+def noise(im,seed):
+    b,g,r=cv2.split(im)
+    bN=random_noise(b, mode='gaussian', seed=seed)
+    gN=random_noise(g, mode='gaussian', seed=seed)
+    rN=random_noise(r, mode='gaussian', seed=seed)
+    #print(np.shape(b))
+    bN = (255 * bN).astype(np.uint8)
+    gN=(255*gN).astype(np.uint8)
+    rN=(255*rN).astype(np.uint8)
+    return cv2.merge([bN,gN,rN])
 def allcolors_quantization(Image,q): # splits colors and applies uniform quantization separately
     b,g,r=cv2.split(Image)
     b2=uniform_quantization(b,q)
