@@ -16,7 +16,13 @@ def makeBasic():
     white_image = ImageTk.PhotoImage(Image.fromarray(white))
     LeftBox = Canvas(root)
     LeftBox.grid(row=1, column=0, columnspan=3)
+    RightBox = Canvas(root)
+    RightBox.grid(row=1, column=6, columnspan=3)
     StartText = Text(LeftBox, width=30)
+    StartText.insert(INSERT, "To start, load an image")
+    StartText.config(state=DISABLED)
+    StartText.pack()
+    StartText = Text(RightBox, width=30)
     StartText.insert(INSERT, "To start, load an image")
     StartText.config(state=DISABLED)
     StartText.pack()
@@ -32,6 +38,9 @@ def makeBasic():
     button = Button(root, text="BIBI", command=lambda: update_main_image("bibi.jpg"))
     button.config(bg="#CFCF2F")
     button.grid(row=2, column=5)
+    button = Button(RightBox, text="Save the current image!", command=lambda: saving_image())
+    button.config(bg="#CFCF2F")
+    button.pack()
     List = give_list()
     List.config(bg="#CFCF2F")
     List.grid(row=0, columns=4)
@@ -43,7 +52,9 @@ def back_to_main():
     if main_array is not white:
         update_image(main_array)
 
-
+def saving_image():
+    a=1
+    #TODO implement this
 def give_list():
     global root
     mylist = ["To BGR", "To HSV", "To Gray", "To HLS", "K_means", "Sobel Edge Detection", "Linear sampling",
@@ -59,7 +70,9 @@ def give_list():
     update_left()
     return w
 
-
+def update_right(*args):
+    TODO=2
+    #TODO implement this
 def update_left(*args):
     global var, LeftBox, main_array, white
     if main_array is not white:
@@ -592,6 +605,7 @@ def update_main_image(filename):
     main_array = resizing(main_array, 1080, 720)
     update_image(main_array)
     update_left()
+    update_right();
 
 
 def load_file():
