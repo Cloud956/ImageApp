@@ -5,7 +5,7 @@ from tkinter import filedialog
 
 
 def makeBasic():
-    global root, main_array, MainImage, image_box, white_image, LeftBox, white, current_array, List
+    global root, main_array, MainImage, image_box, white_image, LeftBox, white, current_array, List, RightBox
     root = Tk()
     root.title("Image processing app")
     root.config(bg="#A0A882")
@@ -52,9 +52,11 @@ def back_to_main():
     if main_array is not white:
         update_image(main_array)
 
-def saving_image():
-    a=1
-    #TODO implement this
+def saving_image(end,title):
+    global current_array
+    String=f"{title}{end}"
+    cv2.imwrite(String,cv2.cvtColor(current_array,cv2.COLOR_RGB2BGR))
+
 def give_list():
     global root
     mylist = ["To BGR", "To HSV", "To Gray", "To HLS", "K_means", "Sobel Edge Detection", "Linear sampling",
@@ -71,8 +73,31 @@ def give_list():
     return w
 
 def update_right(*args):
-    TODO=2
-    #TODO implement this
+    global RightBox,main_array,white
+    if main_array is not white:
+        RightBox.grid_forget()
+        RightBox = Canvas(width=200, height=700)
+        RightBox.grid(row=1, column=6, columnspan=3)
+        text = Text(RightBox, width=30)
+        text.pack()
+        text.insert(INSERT,"Save the current image, as one of the available types. The image will be created in the same folder, as the location of the app.")
+        text.config(state=DISABLED,wrap=WORD)
+        label1 = Label(RightBox, text="Enter title here!")
+        label1.pack()
+        entry1 = Entry(RightBox)
+        entry1.insert(INSERT, "My image")
+        entry1.pack()
+        label1 = Label(RightBox, text="Select the image type.")
+        label1.pack()
+        my_list=[".jpg",".png"]
+        varD=StringVar(RightBox)
+        varD.set(my_list[0])
+        w=OptionMenu(RightBox,varD,*my_list)
+        w.pack()
+        button = Button(RightBox, text="Save the image!", command=lambda: saving_image(varD.get(),entry1.get()))
+        button.config(bg="#CFCF2F")
+        button.pack()
+
 def update_left(*args):
     global var, LeftBox, main_array, white
     if main_array is not white:
@@ -444,6 +469,7 @@ def updateCurrent(image):
 
 def update_image(image):
     global image_box, MainImage, current_array
+    update_right()
     image_box.grid_forget()
     MainImage = ImageTk.PhotoImage(Image.fromarray(image))
     image_box = Label(image=MainImage)
